@@ -1,0 +1,61 @@
+pipeline{
+    tools{
+        jdk 'myjava'
+        maven 'mymaven'
+    }
+        agent none
+            stages{
+                 stage('checkout'){
+        agent any
+        steps {
+            git 'https://github.com/devops-trainer/DevOpsClassCodes.git'
+            }
+        }
+             stage('Compile'){
+                agent any
+                steps{
+                    sh 'mvn compile'
+                }
+                
+            }
+            stage('Code Review'){
+                agent any
+                steps{
+                    sh 'mvn pmd:pmd'
+                }
+                 post{
+                    always{
+                        pmd pattern: 'target/pmd.xml'
+                    }
+                }
+
+            }
+            stage('Unit test'){
+                agent any
+                steps{
+                    sh 'mvn test'
+                }
+                
+            }
+            stage('Metric check'){
+                agent any
+                steps{
+                    sh 'mvn cobertura:cobertura -Dcobertura.report.format=xml'
+                }
+                post{
+                    always{
+                        cobertura coberturaReportFile: 'target/site/cobertura/coverage.xml'
+                    }
+                }
+
+            }
+            stage('Package check'){
+                agent any
+                steps{
+                    sh 'mvn package'
+                }
+            }
+            
+        }
+    
+    }
